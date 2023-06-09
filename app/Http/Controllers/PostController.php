@@ -55,10 +55,35 @@ class PostController extends Controller
         }
     }
 
-    function getAllPosts()
+    function getAllPosts(Request $request)
     {
         try {
-            return Post::all();
+            $currentPage = $request->input('page');
+            $currentPage = $request->input('page');
+            $pageSize = 5;
+            $allPostsCount = Post::query()->count();
+            $pagesCount = ceil ($allPostsCount / $pageSize);
+
+            if ($currentPage) {
+                $request->validate([
+                    'page' => 'nullable|integer|min:1|max:' . $pagesCount,
+                ]);
+            } else {
+                $currentPage = 1;
+            }
+
+            $firstPostIndex = ($currentPage - 1) * $pageSize;
+            $posts = Post::query()->offset($firstPostIndex)->take($pageSize)->get();
+
+            return [
+                'posts' => $posts,
+                'pagination' => [
+                    'size' => $pageSize,
+                    'count' => $pagesCount,
+                    'current' => (int)$currentPage
+                ]
+            ];
+
         } catch (Throwable $e) {
             return $this->returnBadResponse(500, $e->getMessage());
         }
@@ -132,6 +157,15 @@ class PostController extends Controller
             return response('', 200);
         } catch (ModelNotFoundException $e) {
             return $this->returnBadResponse(404, 'Undefined banner with id: ' . $id);
+        } catch (Throwable $e) {
+            return $this->returnBadResponse(500, $e->getMessage());
+        }
+    }
+
+    function getTheLastPost()
+    {
+        try {
+            return Post::query()->orderby('id', 'desc')->first();
         } catch (Throwable $e) {
             return $this->returnBadResponse(500, $e->getMessage());
         }

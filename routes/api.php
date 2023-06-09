@@ -17,7 +17,10 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('/auth')->controller('\App\Http\Controllers\AuthController')->group(function () {
     Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
     Route::middleware('check.token')->group(function () {
-        Route::get('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);
+        Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);
+        Route::get('/check_authorization', function () {
+            return response(['message' => 'The user is authorized'], 200);
+        });
     });
 });
 
@@ -33,10 +36,15 @@ Route::prefix('/banner')->controller('App\Http\Controllers\BannerController')->g
 
 Route::prefix('/post')->controller('App\Http\Controllers\PostController')->group(function () {
     Route::get('', 'getAllPosts');
+    Route::get('/last_post', 'getTheLastPost');
     Route::get('/{id}', 'getPost');
     Route::middleware('check.token')->group(function () {
         Route::post('', 'createPost');
         Route::delete('/{id}', 'deletePost');
         Route::post('/{id}', 'updatePost');
     });
+});
+
+Route::fallback(function () {
+    return response(["message" => "Undefined route"], 404);
 });
