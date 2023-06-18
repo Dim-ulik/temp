@@ -45,6 +45,17 @@ Route::prefix('/post')->controller('App\Http\Controllers\PostController')->group
     });
 });
 
+Route::prefix('/mail')->controller('App\Http\Controllers\MailController')->group(function () {
+    Route::post('/send_form', 'sendForm');
+});
+
+Route::prefix('/price')->group(function () {
+    Route::prefix('/{item}')->controller('App\Http\Controllers\CalculationController')->group(function () {
+        Route::get('', 'getPrice');
+        Route::put('', 'changePrice')->middleware('check.token');
+    });
+});
+
 Route::fallback(function () {
     return response(["message" => "Undefined route"], 404);
 });
